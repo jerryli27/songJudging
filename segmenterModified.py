@@ -43,6 +43,8 @@ def segmenter(y, fs):
             offsets=numpy.append(offsets,time[k])
             noteFreqs=numpy.append(noteFreqs,freqs[k])
     # reshape to 1d
-    offsets=numpy.reshape(offsets,(1,numpy.product(offsets.shape)))
-    noteFreqs=numpy.reshape(noteFreqs,(1,numpy.product(noteFreqs.shape)))
+    # offsets=numpy.reshape(offsets,(1,numpy.product(offsets.shape)))
+    # noteFreqs=numpy.reshape(noteFreqs,(1,numpy.product(noteFreqs.shape)))
+    offsets=offsets.flatten()
+    noteFreqs=noteFreqs.flatten()
     return noteFreqs, offsets
