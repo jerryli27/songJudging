@@ -74,7 +74,10 @@ singerFreqs,singerOffsets=segmenterModified.segmenter(monoAudioBuffer, sampleRat
 print singerFreqs
 print singerOffsets
 
-print noteAlignment.noteAlignment(freqs,offsets,singerFreqs,singerOffsets)
+bestCorrespondingOriIndexList=noteAlignment.noteAlignment(freqs,offsets,singerFreqs,singerOffsets)
+print bestCorrespondingOriIndexList
+
+noteAlignment.visualize(freqs,offsets,singerFreqs,singerOffsets,bestCorrespondingOriIndexList)
 
 # Found out that the current algorithm tries to align -1 with -1 (Because otherwise it does not have any other candidates).
 # Maybe modify it so that -1 can align with nothing?

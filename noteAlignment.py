@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 LOG_FO_WINDOW=0.10
@@ -194,3 +195,36 @@ def viterbiDP(windowLength,candidatesList,candidatesProbList,observationStartInd
         # store the calculated result
         storedMaxProbPath[tup]=(ret,bestHiddenStateIndex)
         return ret,bestHiddenStateIndex
+
+#Note alignment function:
+#	Input: original song and singer's version's:
+#          array of fundamental frequencies, array of time stamps<== the output of note separation
+#          array of index that matches singer notes to original notes.
+#	Output: None. Just a graph
+def visualize(oriF0Array,oriOffsetArray,singerF0Array,singerOffsetArray,bestCorrespondingOriIndexList):
+    fig = plt.figure()
+    oriAx = fig.add_subplot(211)
+    oriLogF0Array=np.fmax(0,np.log(oriF0Array))
+    singerLogF0Array=np.fmax(0,np.log(singerF0Array))
+
+    for oriIndex,oriLogF0 in enumerate(oriLogF0Array):
+        if oriLogF0Array[oriIndex]!=0:
+            # draw a horizontal line
+            oriAx.plot([oriOffsetArray[oriIndex],oriOffsetArray[oriIndex+1]],[oriLogF0,oriLogF0],linewidth=5,c='r')
+
+    singerAx = fig.add_subplot(212)
+
+    for singerIndex,singerLogF0 in enumerate(singerLogF0Array):
+        if singerLogF0Array[singerIndex]!=0:
+            # draw a horizontal line
+            singerAx.plot([singerOffsetArray[singerIndex],singerOffsetArray[singerIndex+1]],[singerLogF0,singerLogF0],linewidth=5,c='b')
+
+    xlim=[min(np.hstack((oriOffsetArray,singerOffsetArray))),max(np.hstack((oriOffsetArray,singerOffsetArray)))]
+    ylim=[min(np.hstack((oriLogF0Array,singerLogF0Array))),max(np.hstack((oriLogF0Array,singerLogF0Array)))+1]
+    oriAx.set_ylim(ylim)
+    oriAx.set_xlim(xlim)
+
+    singerAx.set_ylim(ylim)
+    singerAx.set_xlim(xlim)
+
+    plt.show()
