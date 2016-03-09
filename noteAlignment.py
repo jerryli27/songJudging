@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import math
 
 
 LOG_FO_WINDOW=0.10
@@ -23,8 +24,8 @@ def noteAlignment(oriF0Array,oriOffsetArray,singerF0Array,singerOffsetArray):
 
     # turn F0 array into log F0 array
     # have a max here to prevent log(-1) gives us no number.
-    oriLogF0Array=np.fmax(0,np.log(oriF0Array))
-    singerLogF0Array=np.fmax(0,np.log(singerF0Array))
+    oriLogF0Array=np.fmax(0,np.log2(oriF0Array))
+    singerLogF0Array=np.fmax(0,np.log2(singerF0Array))
 
     # create a list of candidates for each note.
     candidates=[[] for i in range(lenSinger)]
@@ -202,29 +203,72 @@ def viterbiDP(windowLength,candidatesList,candidatesProbList,observationStartInd
 #          array of index that matches singer notes to original notes.
 #	Output: None. Just a graph
 def visualize(oriF0Array,oriOffsetArray,singerF0Array,singerOffsetArray,bestCorrespondingOriIndexList):
-    fig = plt.figure()
-    oriAx = fig.add_subplot(211)
-    oriLogF0Array=np.fmax(0,np.log(oriF0Array))
-    singerLogF0Array=np.fmax(0,np.log(singerF0Array))
+    # First take the log
+    oriLogF0Array=np.fmax(0,np.log2(oriF0Array))
+    singerLogF0Array=np.fmax(0,np.log2(singerF0Array))
+
+
+    # Next we generate labels for each audio
+    oriLabel=[str(i) for i in range(len(oriLogF0Array))]
+    singerLabel=[str(i) for i in bestCorrespondingOriIndexList]
+
 
     for oriIndex,oriLogF0 in enumerate(oriLogF0Array):
         if oriLogF0Array[oriIndex]!=0:
             # draw a horizontal line
-            oriAx.plot([oriOffsetArray[oriIndex],oriOffsetArray[oriIndex+1]],[oriLogF0,oriLogF0],linewidth=5,c='r')
+            plt.plot([oriOffsetArray[oriIndex],oriOffsetArray[oriIndex+1]],[oriLogF0,oriLogF0],linewidth=5,c='r')
 
-    singerAx = fig.add_subplot(212)
+            if oriIndex in bestCorrespondingOriIndexList:
+                plt.annotate(
+                    oriLabel[oriIndex],
+                    xy = ((oriOffsetArray[oriIndex]+oriOffsetArray[oriIndex+1])/2.0, oriLogF0), xytext = (-20, -20),
+                    textcoords = 'offset points', ha = 'right', va = 'bottom',
+                    bbox = dict(boxstyle = 'round,pad=0.5', fc = 'red', alpha = 0.5),
+                    arrowprops = dict(arrowstyle = '->', connectionstyle = 'arc3,rad=0'))
+
+    # singerAx = fig.add_subplot(212)
 
     for singerIndex,singerLogF0 in enumerate(singerLogF0Array):
         if singerLogF0Array[singerIndex]!=0:
             # draw a horizontal line
-            singerAx.plot([singerOffsetArray[singerIndex],singerOffsetArray[singerIndex+1]],[singerLogF0,singerLogF0],linewidth=5,c='b')
+            plt.plot([singerOffsetArray[singerIndex],singerOffsetArray[singerIndex+1]],[singerLogF0,singerLogF0],linewidth=5,c='b')
+            plt.annotate(
+                singerLabel[singerIndex],
+                xy = ((singerOffsetArray[singerIndex]+singerOffsetArray[singerIndex+1])/2.0, singerLogF0), xytext = (-20, 20),
+                textcoords = 'offset points', ha = 'right', va = 'bottom',
+                bbox = dict(boxstyle = 'round,pad=0.5', fc = 'blue', alpha = 0.5),
+                arrowprops = dict(arrowstyle = '->', connectionstyle = 'arc3,rad=0'))
+
+
+    maxLogF0=max(np.hstack((oriLogF0Array,singerLogF0Array)))
+    minLogF0Without0=maxLogF0 # initialize to a large number first.
+
+    for i in np.hstack((oriLogF0Array,singerLogF0Array)):
+        if i>0:
+            minLogF0Without0=min(minLogF0Without0,i)
 
     xlim=[min(np.hstack((oriOffsetArray,singerOffsetArray))),max(np.hstack((oriOffsetArray,singerOffsetArray)))]
-    ylim=[min(np.hstack((oriLogF0Array,singerLogF0Array))),max(np.hstack((oriLogF0Array,singerLogF0Array)))+1]
-    oriAx.set_ylim(ylim)
-    oriAx.set_xlim(xlim)
+    ylim=[minLogF0Without0-0.5,maxLogF0+0.5]  # -4 and +4 to make drawing nicer.
 
-    singerAx.set_ylim(ylim)
-    singerAx.set_xlim(xlim)
-
+    yticks=generateYAxis(ylim)
+    xrange=np.arange(start=0,stop=xlim[1]+0.05,step=0.2) # step 0.2 to make it look nicer
+    yrange=np.arange(start=ylim[0],stop=ylim[1],step=(ylim[1]-ylim[0])/(np.floor((ylim[1]-ylim[0])*12.0)))
+    plt.xticks(xrange)
+    plt.yticks(yrange,yticks)
+    plt.xlabel('Time(s)')
+    plt.ylabel('Notes(Western Notations)')
     plt.show()
+
+# input the limit of y.
+# output the ticks for y axis
+def generateYAxis(ylim):
+    C4log=np.log2(440.0*2.0**(-9.0/12.0))
+    pianoKeys=['G#','A','A#','B','C','C#','D','D#','E','F','F#','G'] # The twelve piano keys
+
+    lowestKey=math.floor((ylim[0]-C4log)*12)+40.0
+    highestKey=math.floor((ylim[1]-C4log)*12)+40.0
+
+    # lowestKey=pianoKeys[math.floor((ylim[0]-C4log)*12)%12]+str(math.floor(ylim[0]-C4log)+4)
+    # highestKey=pianoKeys[math.floor((ylim[1]-C4log)*12)%12]+str(math.floor(ylim[1]-C4log)+4)
+    yticks=[pianoKeys[int(i%12)]+str(int(math.floor((i-40)/12.0)+4))  for i in range(int(lowestKey),int(highestKey))]
+    return yticks
