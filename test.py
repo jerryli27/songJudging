@@ -7,12 +7,14 @@
 from YIN import Yin
 import numpy
 import scipy.io.wavfile
-import segmenterModified
-import noteAlignment
 import matplotlib.pyplot as plt
 import random
 import timeit
 import time
+
+import segmenterModified
+import noteAlignment
+import pitchComparison
 
 # #  Owl_City-Fireflies_Acapella_Official.wav vaiueo2d.wav
 # sampleRate, monoAudioBuffer = scipy.io.wavfile.read('Owl_City-Fireflies_Acapella_Official.wav')
@@ -76,8 +78,12 @@ print singerOffsets
 
 bestCorrespondingOriIndexList=noteAlignment.noteAlignment(freqs,offsets,singerFreqs,singerOffsets)
 print bestCorrespondingOriIndexList
-
+#
 noteAlignment.visualize(freqs,offsets,singerFreqs,singerOffsets,bestCorrespondingOriIndexList)
 
 # Found out that the current algorithm tries to align -1 with -1 (Because otherwise it does not have any other candidates).
 # Maybe modify it so that -1 can align with nothing?
+
+
+pitchRating,pitchSubrating=pitchComparison.pitchComparison(freqs,singerFreqs,bestCorrespondingOriIndexList)
+pitchComparison.visualize(freqs,offsets,singerFreqs,singerOffsets,pitchRating,pitchSubrating)

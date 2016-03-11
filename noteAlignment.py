@@ -257,6 +257,12 @@ def visualize(oriF0Array,oriOffsetArray,singerF0Array,singerOffsetArray,bestCorr
     plt.yticks(yrange,yticks)
     plt.xlabel('Time(s)')
     plt.ylabel('Notes(Western Notations)')
+
+    # Play a little trick on the legend to make it show the right thing.
+    oriLegend = mlines.Line2D([], [], linewidth=5,c='r',label='Original')
+    singerLegend = mlines.Line2D([], [], linewidth=5,c='b',label='Singer')
+    plt.legend(handles=[oriLegend,singerLegend])
+
     plt.show()
 
 # input the limit of y.
