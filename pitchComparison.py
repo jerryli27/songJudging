@@ -35,7 +35,7 @@ def pitchComparison(oriF0Array,singerF0Array,bestCorrespondingOriIndexList):
 
             # triangle filter. Notes that are perfectly on pitch will have score 1.
             # Notes that are half-octave off will have score 0. Everything in between is scored linearly.
-            subrating[i]=1.0-abs(currOriLogF0-currSingerLogF0)/0.5
+            subrating[i]=(1.0-abs(currOriLogF0-currSingerLogF0)/0.5)*100 # *100 to make everything on an 100 scale
             rating+=subrating[i]
             numRated+=1
         else:
@@ -43,6 +43,7 @@ def pitchComparison(oriF0Array,singerF0Array,bestCorrespondingOriIndexList):
 
     # divide by number of scores to get average scoring
     rating/=numRated
+
 
     return rating,subrating
 
@@ -56,23 +57,25 @@ def visualize(oriF0Array,oriOffsetArray,singerF0Array,singerOffsetArray,rating,s
     oriLogF0Array=np.fmax(0,np.log2(oriF0Array))
     singerLogF0Array=np.fmax(0,np.log2(singerF0Array))
 
+    lenOri=len(oriLogF0Array)
+    lenSinger=len(singerLogF0Array)
     # Next we generate labels for each audio
 
 
     for oriIndex,oriLogF0 in enumerate(oriLogF0Array):
-        if oriLogF0Array[oriIndex]!=0:
+        if oriLogF0Array[oriIndex]!=0 and oriIndex+1<lenOri:
             # draw a horizontal line
             plt.plot([oriOffsetArray[oriIndex],oriOffsetArray[oriIndex+1]],[oriLogF0,oriLogF0],linewidth=5,c='r')
 
 
     for singerIndex,singerLogF0 in enumerate(singerLogF0Array):
-        if singerLogF0Array[singerIndex]!=0:
+        if singerLogF0Array[singerIndex]!=0 and singerIndex+1<lenSinger:
             # draw a horizontal line
             plt.plot([singerOffsetArray[singerIndex],singerOffsetArray[singerIndex+1]],[singerLogF0,singerLogF0],linewidth=5,c='b')
 
             if subrating[singerIndex]!=None:
                 plt.annotate(
-                    "{0:.1f}".format(100.0*subrating[singerIndex]),# Times 100 to make it look nicer.
+                    "{0:.1f}".format(subrating[singerIndex]),# Times 100 to make it look nicer.
                     xy = ((singerOffsetArray[singerIndex]+singerOffsetArray[singerIndex+1])/2.0, singerLogF0), xytext = (-20, 20),
                     textcoords = 'offset points', ha = 'right', va = 'bottom',
                     bbox = dict(boxstyle = 'round,pad=0.5', fc = 'blue', alpha = 0.5),
@@ -102,7 +105,7 @@ def visualize(oriF0Array,oriOffsetArray,singerF0Array,singerOffsetArray,rating,s
     singerLegend = mlines.Line2D([], [], linewidth=5,c='b',label='Singer')
     plt.legend(handles=[oriLegend,singerLegend])
 
-    plt.text(xlim[1]-2, ylim[0]+0.5, 'Pitch rating: '+"{0:.1f}".format(100.0*rating), style='italic',
+    plt.text(xlim[1]-4, ylim[0]+0.5, 'Pitch rating: '+"{0:.1f}".format(rating), style='italic',
         bbox={'facecolor':'red', 'alpha':0.5, 'pad':10})
 
     plt.show()

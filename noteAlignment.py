@@ -1,9 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import math
+import matplotlib.lines as mlines
 
 
-LOG_FO_WINDOW=0.10
+LOG_FO_WINDOW=0.20
 OFFSET_WINDOW=1.0
 VITERBI_WINDOW=4
 
@@ -93,19 +94,19 @@ def probTransition(oriNoteCurrIndex,oriNoteNextIndex):
         return 1.0
     elif oriNoteNextIndex==oriNoteCurrIndex+1:
         # If the next index is curr index + 1, that means it's probably a normal transition. Therefore it's probable
-        return 1.0
+        return 0.5
     elif oriNoteNextIndex==oriNoteCurrIndex:
         # If the next index is curr index, that means two singer's note correspond to the same original note
         # This is less probable
-        return 0.5
+        return 0.25
     elif oriNoteNextIndex>oriNoteCurrIndex+1:
         # If the next index is more than curr index+1 , that means we skipped one original note
         # This is even less probable
-        return 0.3
+        return 0.2
     else:
         # If the next index is less than curr index , that means we 're going back to a previous note.
         # This is almost impossible.
-        return 0.1
+        return 0.05
     
 # Input: windowLength, candidatesList (a list, candidatesList[i][j]=the jth hidden state candidate for observed state i.
 # candidatesProbList (a list, candidatesProbList[i][j]= prob of observed i is hidden state candidate j)),
@@ -207,17 +208,17 @@ def visualize(oriF0Array,oriOffsetArray,singerF0Array,singerOffsetArray,bestCorr
     oriLogF0Array=np.fmax(0,np.log2(oriF0Array))
     singerLogF0Array=np.fmax(0,np.log2(singerF0Array))
 
+    lenOri=len(oriLogF0Array)
+    lenSinger=len(singerLogF0Array)
 
     # Next we generate labels for each audio
-    oriLabel=[str(i) for i in range(len(oriLogF0Array))]
+    oriLabel=[str(i) for i in range(lenOri)]
     singerLabel=[str(i) for i in bestCorrespondingOriIndexList]
 
-
     for oriIndex,oriLogF0 in enumerate(oriLogF0Array):
-        if oriLogF0Array[oriIndex]!=0:
+        if oriLogF0Array[oriIndex]!=0 and oriIndex+1<lenOri:
             # draw a horizontal line
             plt.plot([oriOffsetArray[oriIndex],oriOffsetArray[oriIndex+1]],[oriLogF0,oriLogF0],linewidth=5,c='r')
-
             if oriIndex in bestCorrespondingOriIndexList:
                 plt.annotate(
                     oriLabel[oriIndex],
@@ -229,7 +230,7 @@ def visualize(oriF0Array,oriOffsetArray,singerF0Array,singerOffsetArray,bestCorr
     # singerAx = fig.add_subplot(212)
 
     for singerIndex,singerLogF0 in enumerate(singerLogF0Array):
-        if singerLogF0Array[singerIndex]!=0:
+        if singerLogF0Array[singerIndex]!=0 and singerIndex+1<lenSinger:
             # draw a horizontal line
             plt.plot([singerOffsetArray[singerIndex],singerOffsetArray[singerIndex+1]],[singerLogF0,singerLogF0],linewidth=5,c='b')
             plt.annotate(
@@ -278,3 +279,4 @@ def generateYAxis(ylim):
     # highestKey=pianoKeys[math.floor((ylim[1]-C4log)*12)%12]+str(math.floor(ylim[1]-C4log)+4)
     yticks=[pianoKeys[int(i%12)]+str(int(math.floor((i-40)/12.0)+4))  for i in range(int(lowestKey),int(highestKey))]
     return yticks
+

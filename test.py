@@ -11,10 +11,12 @@ import matplotlib.pyplot as plt
 import random
 import timeit
 import time
+import librosa
 
 import segmenterModified
 import noteAlignment
 import pitchComparison
+import BeatTracker
 
 # #  Owl_City-Fireflies_Acapella_Official.wav vaiueo2d.wav
 # sampleRate, monoAudioBuffer = scipy.io.wavfile.read('Owl_City-Fireflies_Acapella_Official.wav')
@@ -63,15 +65,49 @@ import pitchComparison
 # print 'The time it took is on average: '+str((endTime-startTime)/numLoops)+'s'
 
 
-# Sanity check 3. Sing two versions and see if they can align well
+# Sanity check 3. Same version
+#
+# sampleRate, monoAudioBuffer = scipy.io.wavfile.read('Taylor_Swift_-_I_Knew_You_Were_Trouble_30s.wav')
+# freqs, offsets=segmenterModified.segmenter(monoAudioBuffer, sampleRate)
+# print freqs
+# print offsets
+#
+#
+# sampleRate, monoAudioBuffer = scipy.io.wavfile.read('Taylor_Swift_-_I_Knew_You_Were_Trouble_30s.wav')#'Me_Singing_I_Knew_You_Were_Trouble_30s.wav'
+# singerFreqs,singerOffsets=segmenterModified.segmenter(monoAudioBuffer, sampleRate)
+# print singerFreqs
+# print singerOffsets
+#
+# bestCorrespondingOriIndexList=noteAlignment.noteAlignment(freqs,offsets,singerFreqs,singerOffsets)
+# print bestCorrespondingOriIndexList
+# #
+# noteAlignment.visualize(freqs,offsets,singerFreqs,singerOffsets,bestCorrespondingOriIndexList)
+#
+# # Found out that the current algorithm tries to align -1 with -1 (Because otherwise it does not have any other candidates).
+# # Maybe modify it so that -1 can align with nothing?
+#
+#
+# pitchScore,pitchSubrating=pitchComparison.pitchComparison(freqs,singerFreqs,bestCorrespondingOriIndexList)
+# pitchComparison.visualize(freqs,offsets,singerFreqs,singerOffsets,pitchScore,pitchSubrating)
+#
+# beatScore=BeatTracker.call_beat_score('Taylor_Swift_-_I_Knew_You_Were_Trouble_30s.wav','Taylor_Swift_-_I_Knew_You_Were_Trouble_30s.wav',512, 0, 30, 44100, .5)
+# # 'Me_Singing_I_Knew_You_Were_Trouble_30s.wav'
+# totalScore=(pitchScore*0.7+beatScore*0.3)
+#
+# print 'The beat score is: '+"{0:.1f}".format(beatScore)+'The pitch score is: '+"{0:.1f}".format(pitchScore)+\
+#       'The final score is: '+"{0:.1f}".format(totalScore)
 
-sampleRate, monoAudioBuffer = scipy.io.wavfile.read('doremi1.wav')
+# Sanity check 4
+# shift the pitch by 2 half steps
+
+
+sampleRate, monoAudioBuffer = scipy.io.wavfile.read('Taylor_Swift_-_I_Knew_You_Were_Trouble_30s.wav')
 freqs, offsets=segmenterModified.segmenter(monoAudioBuffer, sampleRate)
 print freqs
 print offsets
 
 
-sampleRate, monoAudioBuffer = scipy.io.wavfile.read('doremi2.wav')
+sampleRate, monoAudioBuffer = scipy.io.wavfile.read('Taylor_Swift_-_I_Knew_You_Were_Trouble_30s_2halfsteps.wav')#'Me_Singing_I_Knew_You_Were_Trouble_30s.wav'
 singerFreqs,singerOffsets=segmenterModified.segmenter(monoAudioBuffer, sampleRate)
 print singerFreqs
 print singerOffsets
@@ -85,5 +121,45 @@ noteAlignment.visualize(freqs,offsets,singerFreqs,singerOffsets,bestCorrespondin
 # Maybe modify it so that -1 can align with nothing?
 
 
-pitchRating,pitchSubrating=pitchComparison.pitchComparison(freqs,singerFreqs,bestCorrespondingOriIndexList)
-pitchComparison.visualize(freqs,offsets,singerFreqs,singerOffsets,pitchRating,pitchSubrating)
+pitchScore,pitchSubrating=pitchComparison.pitchComparison(freqs,singerFreqs,bestCorrespondingOriIndexList)
+pitchComparison.visualize(freqs,offsets,singerFreqs,singerOffsets,pitchScore,pitchSubrating)
+
+beatScore=BeatTracker.call_beat_score('Taylor_Swift_-_I_Knew_You_Were_Trouble_30s.wav','Taylor_Swift_-_I_Knew_You_Were_Trouble_30s_2halfsteps.wav',512, 0, 30, 44100, .5)
+# 'Me_Singing_I_Knew_You_Were_Trouble_30s.wav'
+totalScore=(pitchScore*0.7+beatScore*0.3)
+
+print 'The beat score is: '+"{0:.1f}".format(beatScore)+'The pitch score is: '+"{0:.1f}".format(pitchScore)+\
+      'The final score is: '+"{0:.1f}".format(totalScore)
+
+# Sanity check 5. Take two completely different songs and see what's the score.
+#
+# sampleRate, monoAudioBuffer = scipy.io.wavfile.read('Taylor_Swift_-_I_Knew_You_Were_Trouble_30s.wav')
+# freqs, offsets=segmenterModified.segmenter(monoAudioBuffer, sampleRate)
+# print freqs
+# print offsets
+#
+#
+# sampleRate, monoAudioBuffer = scipy.io.wavfile.read('fireflies_30s.wav')#'Me_Singing_I_Knew_You_Were_Trouble_30s.wav'
+# singerFreqs,singerOffsets=segmenterModified.segmenter(monoAudioBuffer, sampleRate)
+# print singerFreqs
+# print singerOffsets
+#
+# bestCorrespondingOriIndexList=noteAlignment.noteAlignment(freqs,offsets,singerFreqs,singerOffsets)
+# print bestCorrespondingOriIndexList
+# #
+# noteAlignment.visualize(freqs,offsets,singerFreqs,singerOffsets,bestCorrespondingOriIndexList)
+#
+# # Found out that the current algorithm tries to align -1 with -1 (Because otherwise it does not have any other candidates).
+# # Maybe modify it so that -1 can align with nothing?
+#
+#
+# pitchScore,pitchSubrating=pitchComparison.pitchComparison(freqs,singerFreqs,bestCorrespondingOriIndexList)
+# pitchComparison.visualize(freqs,offsets,singerFreqs,singerOffsets,pitchScore,pitchSubrating)
+#
+# beatScore=BeatTracker.call_beat_score('Taylor_Swift_-_I_Knew_You_Were_Trouble_30s.wav','fireflies_30s.wav',512, 0, 30, 44100, .1)
+# # 'Me_Singing_I_Knew_You_Were_Trouble_30s.wav'
+# totalScore=(pitchScore*0.7+beatScore*0.3)
+#
+# print 'The beat score is: '+"{0:.1f}".format(beatScore)+'The pitch score is: '+"{0:.1f}".format(pitchScore)+\
+#       'The final score is: '+"{0:.1f}".format(totalScore)
+#
